@@ -36,11 +36,19 @@ async function setDate() {
 const throttle = async () => {
   let result = null;
   try {
-    await fs2.access(filePath, fs.constants.F_OK);
-    result = await getDate();
+    // 检查文件是否存在
+    try {
+      await fs2.access(filePath, fs.constants.F_OK);
+      // 文件存在，获取日期
+      result = await getDate();
+    } catch (err) {
+      // 文件不存在，创建文件
+      console.log('文件不存在，创建新文件');
+      result = await setDate();
+    }
   } catch (err) {
-    console.log('Error:', err);
-    result = await setDate();
+    console.error('发生错误:', err);
+    result = false;
   }
   return result;
 };
