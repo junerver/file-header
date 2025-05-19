@@ -7,11 +7,11 @@ const fileEncode = process.argv[4]
 const fileExt = process.argv[5]
 const user = process.argv[6]
 const filePath = path.join(fileDir, fileName)
-const {throttle} = require('C:\\Users\\Administrator\\Documents\\code\\file-header\\throttle.js')
+const { throttle } = require('./throttle.js')
 const isLess = num => num < 10 ? ('0' + num) : num
 
 const timeFormat = now => {
-  return `${now.getFullYear()}-${ isLess(now.getMonth() + 1) }-${isLess(now.getDate())} ${isLess(now.getHours())}:${isLess(now.getMinutes())}:${isLess(now.getSeconds())}`
+  return `${now.getFullYear()}-${isLess(now.getMonth() + 1)}-${isLess(now.getDate())} ${isLess(now.getHours())}:${isLess(now.getMinutes())}:${isLess(now.getSeconds())}`
 }
 
 
@@ -20,28 +20,28 @@ console.log(`path: ${filePath}, encode: ${fileEncode}, ext: ${fileExt}`)
 try {
 
   throttle().then(mainR => {
-    if (!mainR){
-      console.log('app-未通过',mainR)
+    if (!mainR) {
+      console.log('app-未通过', mainR)
       return
-    }else{
-      console.log('app-通过',mainR)
+    } else {
+      console.log('app-通过', mainR)
       const source = fs.readFileSync(filePath, {
         encoding: fileEncode
       })
       let sourceStr = source.toString()
 
       const editor =
-          sourceStr.match(/(@LastEditors: )(.*)/) ? sourceStr.match(/(@LastEditors: )(.*)/)[0] : false
+        sourceStr.match(/(@LastEditors: )(.*)/) ? sourceStr.match(/(@LastEditors: )(.*)/)[0] : false
 
       const time =
-          sourceStr.match(/(@LastEditTime: )(.*)/) ? sourceStr.match(/(@LastEditTime: )(.*)/)[0] : false
+        sourceStr.match(/(@LastEditTime: )(.*)/) ? sourceStr.match(/(@LastEditTime: )(.*)/)[0] : false
 
       const date = timeFormat(new Date())
 
       if (!editor || !time) {
 
         let header;
-        if (['js', 'ts','jsx', 'tsx'].includes(fileExt)) {
+        if (['js', 'ts', 'jsx', 'tsx'].includes(fileExt)) {
           header = `/*\n * @Author: ${user}\n * @Date: ${date}\n * @LastEditors: ${user}\n * @LastEditTime: ${date}\n * @Description: desc\n */\n`;
         } else if (['vue', 'html'].includes(fileExt)) {
           header = `<!--\n * @Author: ${user}\n * @Date: ${date}\n * @LastEditors: ${user}\n * @LastEditTime: ${date}\n * @Description: desc\n -->\n`;
