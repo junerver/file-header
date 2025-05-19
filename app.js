@@ -11,43 +11,67 @@ const filePath = path.join(fileDir, fileName)
 const isLess = num => num < 10 ? ('0' + num) : num
 
 const timeFormat = now => {
-  return `${now.getFullYear()}-${ isLess(now.getMonth() + 1) }-${isLess(now.getDate())} ${isLess(now.getHours())}:${isLess(now.getMinutes())}:${isLess(now.getSeconds())}`
+  return `${now.getFullYear()}-${isLess(now.getMonth() + 1)}-${isLess(now.getDate())} ${isLess(now.getHours())}:${isLess(now.getMinutes())}`
 }
 
+// 新增：格式化日期字符串，将 2025/5/19 17:12 转换为 2025-05-19 17:12
+const formatDateString = dateStr => {
+  // 分离日期和时间部分
+  const parts = dateStr.split(' ')
+  const datePart = parts[0]
+  const timePart = parts.length > 1 ? parts.slice(1).join(' ') : ''
 
-console.log(`path: ${filePath}, encode: ${fileEncode}, ext: ${fileExt}`)
-
-try {
-
-  const source = fs.readFileSync(filePath, {
-    encoding: fileEncode
-  })
-  let sourceStr = source.toString()
-
-  const editor =
-    sourceStr.match(/(@LastEditors: )(.*)/) ? sourceStr.match(/(@LastEditors: )(.*)/)[0] : false
-
-  const time =
-    sourceStr.match(/(@LastEditTime: )(.*)/) ? sourceStr.match(/(@LastEditTime: )(.*)/)[0] : false
-
-  const date = timeFormat(new Date())
-
-  if (!editor || !time) {
-
-    const header =
-      `/*\n * @Author: ${user}\n * @Date: ${date}\n * @LastEditors: ${user}\n * @LastEditTime: ${date}\n * @Description: desc\n */\n`
-
-    sourceStr = header + sourceStr
-
-  } else {
-
-    sourceStr = sourceStr.replace(editor, `@LastEditors: ${user}`)
-    sourceStr = sourceStr.replace(time, `@LastEditTime: ${date}`)
-
+  // 格式化日期部分
+  if (datePart.includes('/')) {
+    const datePieces = datePart.split('/')
+    if (datePieces.length >= 3) {
+      const year = datePieces[0]
+      const month = isLess(parseInt(datePieces[1]))
+      const day = isLess(parseInt(datePieces[2]))
+      // 返回格式化后的日期和原始时间
+      return `${year}-${month}-${day}${timePart ? ' ' + timePart : ''}`
+    }
   }
-
-  fs.writeFileSync(filePath, sourceStr, { encoding: fileEncode })
-
-} catch (e) {
-  console.log(e)
+  return dateStr
 }
+
+// console.log(`path: ${filePath}, encode: ${fileEncode}, ext: ${fileExt}`)
+const allowExt = ['js', 'jsx', 'ts', 'tsx']
+if (allowExt.includes(fileExt)) {
+  try {
+    const source = fs.readFileSync(filePath, {
+      encoding: fileEncode
+    })
+    let sourceStr = source.toString()
+
+    const editor =
+      sourceStr.match(/(@LastEditors )(.*)/) ? sourceStr.match(/(@LastEditors )(.*)/)[0] : false
+
+    const time =
+      sourceStr.match(/(@LastEditTime )(.*)/) ? sourceStr.match(/(@LastEditTime )(.*)/)[0] : false
+
+    // 新增：匹配 @Date 格式
+    const dateMatch =
+      sourceStr.match(/(@Date )(.*)/) ? sourceStr.match(/(@Date )(.*)/)[0] : false
+
+    const date = timeFormat(new Date())
+    // console.log(editor, time);
+
+    if (editor && time) {
+      sourceStr = sourceStr.replace(editor, `@LastEditors ${user}`)
+      sourceStr = sourceStr.replace(time, `@LastEditTime ${date}`)
+      fs.writeFileSync(filePath, sourceStr, { encoding: fileEncode })
+    }
+
+    // 新增：处理 @Date 格式
+    if (dateMatch) {
+      const dateValue = dateMatch.split('@Date ')[1]
+      const formattedDate = formatDateString(dateValue)
+      sourceStr = sourceStr.replace(dateMatch, `@Date ${formattedDate}`)
+      fs.writeFileSync(filePath, sourceStr, { encoding: fileEncode })
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
